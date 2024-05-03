@@ -1,2 +1,2 @@
-# go-struct-value
-Golang library for get all value of struct
+# GetFieldValue
+Golang get field value use refector
