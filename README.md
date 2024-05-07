@@ -39,18 +39,62 @@ but cannot use with nested struct
   }
 
   func (req CustomStruct) GetFieldInsertData() ([]string, []any, error) {
-	 return go_struct_value.GetSqlAndDataForInsert(req, nil, nil, convertDateToEpoch)
+	 return go_struct_value.GetSqlAndDataForInsert(req, customFieldName, addCustomFields, convertDateToEpoch)
   }
 
   func (req CustomStruct) GetFieldUpdateMap() (map[string]any, error) {
-	 return go_struct_value.GetFieldValueMap(req, nil, convertDateToEpoch)
+	 return go_struct_value.GetFieldValueMap(req, customFieldName, convertDateToEpoch)
   }
 
   func (req CustomStruct) GetAllFieldValueMap() (map[string]any, error) {
-	 return go_struct_value.GetAllFieldValueMap(req, nil, convertDateToEpoch)
+	 return go_struct_value.GetAllFieldValueMap(req, customFieldName, convertDateToEpoch)
   }
   ```
 
+### - GetAllColumnsNameString return all property name array and convert to snake case
+### - GetFieldInsertData      return all property name array(string snake case) and array value of all property
+### - GetFieldUpdateMap       return map[string]any the key is property name (string snake case) value is a value of property. but get kay and value if property has value only ( not nil or empty string)
+### - GetAllFieldValueMap     return map[string]any the key is property name (string snake case) value is a value of property include nil or empty string
+
+## Example
+  ```bash
+var testStringPtr = "testStringPtr"
+	var testIntPtr = 1234
+	var testBoolPtr = true
+
+	var customStruct = model.CustomStruct{
+		TestStringPtr: &testStringPtr,
+		TestIntPtr:    &testIntPtr,
+		TestBoolPtr:   &testBoolPtr,
+		TestString:    "TestString",
+		TestInt:       4321,
+		TestBool:      false,
+		TestEpochTime: "2024-02-04 13:53:05",
+		TestJson: map[string]interface{}{
+			"col1": "col1",
+		},
+	}
+
+	var mapFieldValues, err = customStruct.GetAllFieldValueMap()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	for key, value := range mapFieldValues {
+		fmt.Printf("Key: %s, Value: %v\n", key, value)
+	}
+  ```
+## Output
+```bash
+  Key: test_json, Value: [123 34 99 111 108 49 34 58 34 99 111 108 49 34 125]
+  Key: test_string_ptr, Value: testStringPtr
+  Key: test_int_ptr, Value: 1234
+  Key: test_bool_ptr, Value: true
+  Key: test_string, Value: TestString
+  Key: test_int, Value: 4321
+  Key: test_bool, Value: false
+  Key: test_epoch_time, Value: 1707029585
+  ```
 
 
 
