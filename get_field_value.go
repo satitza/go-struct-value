@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/iancoleman/strcase"
@@ -547,7 +548,6 @@ func GetAllFieldValueMap(req interface{}, customFieldName map[string]string, con
 	return mapFields, nil
 }
 
-
 // Use for audit logs
 func ConvertDateTimeStringToEpochTimeString(req interface{}, convertDateToEpoch []string) (interface{}, error) {
 
@@ -570,17 +570,16 @@ func ConvertDateTimeStringToEpochTimeString(req interface{}, convertDateToEpoch 
 						oldDateString = value.Interface()
 					}
 
-					location, err := dateutil.LoadThaiLocation()
+					location, err := time.LoadLocation("Asia/Bangkok")
+					if err != nil {
+						return nil, err
+					}
+					epoch, err := time.ParseInLocation("2006-01-02 15:04:05", fmt.Sprintf("%s", oldDateString), location)
 					if err != nil {
 						return nil, err
 					}
 
-					epoch, err := dateutil.DateTimeString2EpochInLocation("2006-01-02 15:04:05", fmt.Sprintf("%s", oldDateString), location)
-					if err != nil {
-						return nil, err
-					}
-
-					newValue := strconv.FormatInt(epoch, 10)
+					newValue := strconv.FormatInt(epoch.Unix(), 10)
 
 					if dataType == reflect.Pointer {
 						value.Elem().Set(reflect.ValueOf(newValue))
@@ -594,4 +593,3 @@ func ConvertDateTimeStringToEpochTimeString(req interface{}, convertDateToEpoch 
 
 	return req, nil
 }
-
