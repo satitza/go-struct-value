@@ -546,3 +546,52 @@ func GetAllFieldValueMap(req interface{}, customFieldName map[string]string, con
 
 	return mapFields, nil
 }
+
+
+// Use for audit logs
+func ConvertDateTimeStringToEpochTimeString(req interface{}, convertDateToEpoch []string) (interface{}, error) {
+
+	values := reflect.ValueOf(req)
+	for index := 0; index < reflect.TypeOf(req).NumField(); index++ {
+
+		field := reflect.TypeOf(req).Field(index)
+		dataType := field.Type.Kind()
+		fieldName := strcase.ToSnake(field.Name)
+
+		for _, fieldConfigName := range convertDateToEpoch {
+			if fieldName == fieldConfigName {
+				value := values.Field(index)
+
+				if !value.IsNil() && !value.IsZero() {
+					var oldDateString any
+					if dataType == reflect.Pointer {
+						oldDateString = value.Elem().Interface()
+					} else {
+						oldDateString = value.Interface()
+					}
+
+					location, err := dateutil.LoadThaiLocation()
+					if err != nil {
+						return nil, err
+					}
+
+					epoch, err := dateutil.DateTimeString2EpochInLocation("2006-01-02 15:04:05", fmt.Sprintf("%s", oldDateString), location)
+					if err != nil {
+						return nil, err
+					}
+
+					newValue := strconv.FormatInt(epoch, 10)
+
+					if dataType == reflect.Pointer {
+						value.Elem().Set(reflect.ValueOf(newValue))
+					} else {
+						value.Set(reflect.ValueOf(newValue))
+					}
+				}
+			}
+		}
+	}
+
+	return req, nil
+}
+
